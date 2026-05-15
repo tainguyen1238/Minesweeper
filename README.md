@@ -1,6 +1,6 @@
 # Minesweeper Game
 
-A classic Minesweeper game implemented in Java using Swing GUI framework.
+A classic Minesweeper game implemented in Java using Swing GUI framework to showcase principles of Algorithms and Data Structures. Namely: OOP, arrays, queues, stacks, list and recursion.
 
 ## Features
 
