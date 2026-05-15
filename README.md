@@ -85,9 +85,11 @@ Game settings can be modified in `src/util/GameConfig.java`:
 - `COLS`: Number of columns (default: 20)
 - `MINES`: Number of mines (default: 45)
 
+## License
+- MIT
+
 ## Technologies Used
 
 - Java Swing for GUI
 - Observer Pattern for UI updates
 - Stack-based undo system with deep copy snapshots</content>
-<parameter name="filePath">c:\Users\nhung\Downloads\DSA\Project\Test#3\README.md
