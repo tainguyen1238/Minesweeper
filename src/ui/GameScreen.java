@@ -2,6 +2,7 @@ package ui;
 
 import game.logic.GameSession;
 import game.events.GameObserver;
+import game.help.GlassSeer;
 import game.model.Cell;
 import util.GameConfig;
 import util.GameTimer;
@@ -91,7 +92,7 @@ public class GameScreen extends JPanel implements GameObserver {
         });
 
         glassButton = new JButton("🔍 Glass Seer");
-        glassButton.addActionListener(e -> session.activateGlassSeer());
+        glassButton.addActionListener(e -> session.toggleHelp(new GlassSeer()));
 
         Component[] labels = {timerLabel, totalMinesLabel, flagsPlacedLabel, cellsOpenedLabel, undoButton, restartButton, menuButton, glassButton};
         for (Component c : labels) {
@@ -164,9 +165,12 @@ public class GameScreen extends JPanel implements GameObserver {
             gameTimer.start();
         }
 
-        if (session.isGlassActive()) glassButton.setText("Cancel Glass");
-        else glassButton.setText("🔍 Glass Seer (" + session.getGlassCount() + ")");
-        glassButton.setEnabled(!session.isGameOver() && (session.getGlassCount() > 0 || session.isGlassActive()));
+        if (session.isAssistActive() && session.getActiveAssistName().equals("Glass Seer")) {
+            glassButton.setText("Cancel Seer");
+        } else {
+            glassButton.setText("🔍 Glass Seer (" + session.getHelpUsesLeft() + ")");
+        }
+        glassButton.setEnabled(!session.isGameOver() && (session.getHelpUsesLeft() > 0 || session.isAssistActive()));
         
         undoButton.setEnabled(session.isUndoAvailable());
         if (session.isFirstClick()) {
