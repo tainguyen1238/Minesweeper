@@ -31,5 +31,7 @@ public class WindowController extends JFrame {
 
     public void showScreen(String screenName) {
         cardLayout.show(mainContainer, screenName);
+        pack();
+        setLocationRelativeTo(null);
     }
 }

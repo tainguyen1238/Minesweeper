@@ -6,9 +6,25 @@ import java.awt.*;
 
 public class StartScreen extends JPanel {
     
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        
+        Graphics2D g2d = (Graphics2D) g;
+        
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        Color colorTop = Color.decode("#7e43e6");    
+        Color colorBottom = Color.decode("#0b2965"); 
+        
+        GradientPaint gradient = new GradientPaint(0, 0, colorTop, 0, getHeight(), colorBottom);
+        
+        g2d.setPaint(gradient);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+    }
+
     public StartScreen(WindowController controller, GameSession session) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBackground(new Color(40, 44, 52));
 
         JLabel titleLabel = new JLabel("Minesweeper");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 40));
@@ -20,29 +36,56 @@ public class StartScreen extends JPanel {
         styleCheckBox(revealMinesToggle);
         styleCheckBox(canUndoToggle);
 
-        JButton playButton = new JButton("START GAME");
-        playButton.setFont(new Font("Arial", Font.BOLD, 20));
-        playButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        playButton.addActionListener(e -> {
-            session.configureGame(revealMinesToggle.isSelected(), canUndoToggle.isSelected());
+        Dimension btnSize = new Dimension(250, 50);
+
+        JButton stdBtn = new JButton("Standard Mode");
+        stdBtn.setFont(new Font("Arial", Font.BOLD, 18));
+        stdBtn.setPreferredSize(btnSize);
+        stdBtn.setMaximumSize(btnSize);
+        stdBtn.setFocusPainted(false);
+        stdBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        stdBtn.addActionListener(e -> {
+            session.configureGame(new game.mode.StandardMode(), revealMinesToggle.isSelected(), canUndoToggle.isSelected());
             controller.showScreen("GameScreen");
         });
 
-        JButton quitButton = new JButton("QUIT");
-        quitButton.setFont(new Font("Arial", Font.BOLD, 20));
+        JButton rushBtn = new JButton("Rush Mode");
+        rushBtn.setFont(new Font("Arial", Font.BOLD, 18));
+        rushBtn.setPreferredSize(btnSize);
+        rushBtn.setMaximumSize(btnSize);
+        rushBtn.setFocusPainted(false);
+        rushBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        rushBtn.addActionListener(e -> {
+            session.configureGame(new game.mode.RushMode(), revealMinesToggle.isSelected(), canUndoToggle.isSelected());
+            controller.showScreen("GameScreen");
+        });
+
+        JButton quitButton = new JButton("Quit");
+        quitButton.setFont(new Font("Arial", Font.BOLD, 18));
+        quitButton.setPreferredSize(btnSize);
+        quitButton.setMaximumSize(btnSize);
+        quitButton.setFocusPainted(false);
         quitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         quitButton.addActionListener(e -> System.exit(0));
 
-        add(Box.createVerticalGlue());
+        add(Box.createVerticalGlue()); 
+        
         add(titleLabel);
         add(Box.createRigidArea(new Dimension(0, 20)));
+        
         add(revealMinesToggle);
         add(canUndoToggle);
         add(Box.createRigidArea(new Dimension(0, 30)));
-        add(playButton);
+        
+        add(stdBtn);
         add(Box.createRigidArea(new Dimension(0, 15)));
+        
+        add(rushBtn);
+        add(Box.createRigidArea(new Dimension(0, 15)));
+        
         add(quitButton);
-        add(Box.createVerticalGlue());
+        
+        add(Box.createVerticalGlue()); // Pushes everything up to center
     }
 
     private void styleCheckBox(JCheckBox cb) {

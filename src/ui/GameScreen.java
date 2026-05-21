@@ -4,6 +4,7 @@ import game.logic.GameSession;
 import game.events.GameObserver;
 import game.model.Cell;
 import util.GameConfig;
+import util.GameTimer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -12,10 +13,7 @@ public class GameScreen extends JPanel implements GameObserver {
     private WindowController controller;
     private GameSession session;
     private JButton[][] buttons;
-    
-    private Timer gameTimer;
-    private int secondsElapsed;
-    
+    private GameTimer gameTimer;
     private JLabel timerLabel, totalMinesLabel, flagsPlacedLabel, cellsOpenedLabel;
     private JButton glassButton, undoButton;
     private ImageIcon flagIcon;
@@ -35,9 +33,15 @@ public class GameScreen extends JPanel implements GameObserver {
         
         setLayout(new BorderLayout());
 
-        gameTimer = new Timer(1000, e -> {
-            secondsElapsed++;
-            timerLabel.setText("Time: " + secondsElapsed + "s");
+        gameTimer = new GameTimer(ticks -> {
+            game.mode.GameMode mode = session.getGameMode();
+            
+            timerLabel.setText("Time: " + mode.calculateTimeDisplay(ticks) + "s");
+            
+            if (mode.isTimeUp(ticks)) {
+                gameTimer.stop();
+                session.timeRanOut(); 
+            }
         });
 
         add(createRightPanel(), BorderLayout.EAST);
@@ -47,8 +51,7 @@ public class GameScreen extends JPanel implements GameObserver {
             @Override
             public void componentShown(ComponentEvent e) {
                 session.startNewGame(); 
-                gameTimer.stop();
-                secondsElapsed = 0;
+                gameTimer.reset();
                 timerLabel.setText("Time: 0s");
             }
         });
@@ -77,8 +80,7 @@ public class GameScreen extends JPanel implements GameObserver {
         JButton restartButton = new JButton("Restart Game");
         restartButton.addActionListener(e -> {
             session.startNewGame();
-            gameTimer.stop();
-            secondsElapsed = 0;
+            gameTimer.reset();
             timerLabel.setText("Time: 0s");
         });
 
@@ -136,6 +138,18 @@ public class GameScreen extends JPanel implements GameObserver {
         return gridPanel;
     }
 
+    private Color getNumberColor(int mines) {
+    return switch (mines) {
+        case 1 -> Color.BLUE;
+        case 2 -> new Color(0, 128, 0);  
+        case 3 -> Color.RED;
+        case 4 -> new Color(0, 0, 128);  
+        case 5 -> new Color(128, 0, 0);   
+        case 6 -> new Color(0, 128, 128); 
+        default -> Color.BLACK;
+    };
+}
+
     private ImageIcon getScaledIcon(ImageIcon icon, int width, int height) {
         Image image = icon.getImage();
         Image scaled = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
@@ -146,15 +160,17 @@ public class GameScreen extends JPanel implements GameObserver {
     public void onBoardUpdated() {
         flagsPlacedLabel.setText("Flags: " + session.getFlagsPlaced());
         cellsOpenedLabel.setText("Opened: " + session.getRevealedCount() + "/" + GameConfig.SAFE_CELLS);
-        
-        if (session.isGlassActive()) glassButton.setText("Select a cell...");
+        if (!session.isGameOver() && !session.isFirstClick() && !gameTimer.isRunning()) {
+            gameTimer.start();
+        }
+
+        if (session.isGlassActive()) glassButton.setText("Cancel Glass");
         else glassButton.setText("🔍 Glass Seer (" + session.getGlassCount() + ")");
-        glassButton.setEnabled(session.getGlassCount() > 0 && !session.isGlassActive() && !session.isGameOver());
+        glassButton.setEnabled(!session.isGameOver() && (session.getGlassCount() > 0 || session.isGlassActive()));
         
         undoButton.setEnabled(session.isUndoAvailable());
         if (session.isFirstClick()) {
-            gameTimer.stop();
-            secondsElapsed = 0;
+            gameTimer.reset();
             timerLabel.setText("Time: 0s");
         }
 
@@ -164,29 +180,38 @@ public class GameScreen extends JPanel implements GameObserver {
                 Cell cell = session.getCell(r, c);
                 JButton btn = buttons[r][c];
                 
-                btn.setEnabled(!session.isGameOver() && !cell.isRevealed());
+                btn.setEnabled(!session.isGameOver());
+                btn.setMargin(new Insets(0, 0, 0, 0));
                 
                 if (cell.isRevealed()) {
-                    btn.setBackground(Color.LIGHT_GRAY);
-                    btn.setIcon(null);
+                    btn.setOpaque(true);
+                    btn.setBorder(BorderFactory.createLineBorder(Color.decode("#d0d0d0"), 1)); 
+                
+                    btn.setIcon(null); 
+                    
                     if (cell.isMine()) {
                         btn.setText("X");
-                        btn.setBackground(Color.RED);
+                        btn.setBackground(Color.decode("#e53030")); 
+                        btn.setForeground(Color.WHITE);
                     } else if (cell.getAdjacentMines() > 0) {
                         btn.setText(String.valueOf(cell.getAdjacentMines()));
-                        btn.setForeground(Color.BLUE);
+                        btn.setForeground(getNumberColor(cell.getAdjacentMines()));
+                        btn.setBackground(Color.decode("#e0e0e0")); 
                     } else {
                         btn.setText("");
+                        btn.setBackground(Color.decode("#e0e0e0"));
                     }
-                } else if (cell.isFlagged()) {
-                    btn.setIcon(flagIcon);
-                    btn.setText("");
-                    btn.setForeground(Color.RED);
-                    btn.setBackground(null);
                 } else {
-                    btn.setIcon(null);
+                    btn.setOpaque(true);
+                    btn.setBackground(Color.WHITE);
+                    btn.setBorder(BorderFactory.createLineBorder(Color.decode("#b0b0b0"), 1));
                     btn.setText("");
-                    btn.setBackground(null);
+                    
+                    if (cell.isFlagged()) {
+                        btn.setIcon(flagIcon);
+                    } else {
+                        btn.setIcon(null);
+                    }
                 }
             }
         }
@@ -196,7 +221,7 @@ public class GameScreen extends JPanel implements GameObserver {
     public void onGameWon() {
         gameTimer.stop();
         onBoardUpdated(); 
-        JOptionPane.showMessageDialog(this, "You Win! Time: " + secondsElapsed + "s");
+        JOptionPane.showMessageDialog(this, "You Win! Time: " + gameTimer.getSecondsElapsed() + "s");
     }
 
     @Override
