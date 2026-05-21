@@ -65,6 +65,9 @@ src/
 ├── game/
 │   ├── events/
 │   │   └── GameObserver.java        # Observer pattern interface
+│   ├── help/
+│   │   ├── GameHelp.java            # Game help interface
+│   │   └── GlassSeer.java           # Glass seer help
 │   ├── logic/
 │   │   ├── BoardGenerator.java      # Board and mine placement logic
 │   │   ├── GameSession.java         # Game logic and state management
