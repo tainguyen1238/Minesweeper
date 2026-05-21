@@ -6,9 +6,25 @@ import java.awt.*;
 
 public class StartScreen extends JPanel {
     
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        
+        Graphics2D g2d = (Graphics2D) g;
+        
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        Color colorTop = Color.decode("#7e43e6");    
+        Color colorBottom = Color.decode("#0b2965"); 
+        
+        GradientPaint gradient = new GradientPaint(0, 0, colorTop, 0, getHeight(), colorBottom);
+        
+        g2d.setPaint(gradient);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+    }
+
     public StartScreen(WindowController controller, GameSession session) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBackground(new Color(40, 44, 52));
 
         JLabel titleLabel = new JLabel("Minesweeper");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 40));
