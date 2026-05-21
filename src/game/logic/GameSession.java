@@ -3,6 +3,7 @@ package game.logic;
 import game.model.Cell;
 import game.events.GameObserver;
 import util.GameConfig;
+import game.help.GameHelp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,8 +20,8 @@ public class GameSession {
     
     private boolean revealMinesOnLoss;
     private boolean canUndoAfterMine;
-    private int glassCount;
-    private boolean isGlassActive;
+    private GameHelp activeHelp;
+    private int helpUsesLeft;
 
     public GameSession() {
         observers = new ArrayList<>();
@@ -52,8 +53,8 @@ public class GameSession {
         }
         isFirstClick = true;
         isGameOver = false;
-        glassCount = GameConfig.INITIAL_GLASS_COUNT;
-        isGlassActive = false;
+        helpUsesLeft = GameConfig.INITIAL_GLASS_COUNT;
+        activeHelp = null;
         historyManager.clear();
         notifyBoardUpdated();
     }
@@ -70,13 +71,13 @@ public class GameSession {
         return false;
     }
     
-    public void activateGlassSeer() {
+    public void toggleHelp(GameHelp help) {
         if (isGameOver) return;
-
-        if (isGlassActive) {
-            isGlassActive = false;
-        } else if (glassCount > 0) {
-            isGlassActive = true;  
+        
+        if (activeHelp != null && activeHelp.getClass() == help.getClass()) {
+            activeHelp = null;
+        } else if (helpUsesLeft > 0) {
+            activeHelp = help;
         }
         notifyBoardUpdated();
     }
@@ -118,12 +119,14 @@ public class GameSession {
             isFirstClick = false;
         }
 
-        if (isGlassActive) {
-            isGlassActive = false;
-            glassCount--;
-            cell.reveal();
-            notifyBoardUpdated();
-            return;
+        if (activeHelp != null) {
+            boolean success = activeHelp.execute(this, r, c);
+            if (success) {
+                helpUsesLeft--;
+                activeHelp = null; 
+                notifyBoardUpdated();
+            }
+            return; 
         }
 
         revealCell(r, c);
@@ -243,8 +246,9 @@ public class GameSession {
     // Getters
     public Cell getCell(int r, int c) { return board[r][c]; }
     public boolean isGameOver() { return isGameOver; }
-    public int getGlassCount() { return glassCount; }
-    public boolean isGlassActive() { return isGlassActive; }
+    public int getHelpUsesLeft() { return helpUsesLeft; }
+    public boolean isAssistActive() { return activeHelp != null; }
+    public String getActiveAssistName() { return activeHelp != null ? activeHelp.getName() : ""; }
     public int getRevealedCount() { return countRevealedCells(); }
     public boolean isFirstClick() { return isFirstClick; }
     public boolean isUndoAvailable() { return historyManager.isUndoAvailable(); }
